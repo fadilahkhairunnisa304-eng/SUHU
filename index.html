@@ -1,0 +1,841 @@
+
+<html lang="id" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAR Suhu - Fisika SMA Kelas X</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Three.js OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.8); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 1); }
+        
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; }
+            .print-full { width: 100% !important; max-width: 100% !important; overflow: visible !important; }
+            .glass-panel, .glass-card { background: none !important; border: 1px solid #ccc !important; color: black !important; backdrop-filter: none !important; }
+            input, select, textarea { border: 1px solid #999 !important; color: black !important; background: white !important; }
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col overflow-x-hidden">
+
+    <!-- Header Navigation -->
+    <header class="glass-panel border-b border-slate-700/50 px-4 py-3 sticky top-0 z-50 flex items-center justify-between no-print">
+        <div class="flex items-center space-x-3">
+            <div class="bg-gradient-to-tr from-cyan-500 to-blue-600 p-2.5 rounded-xl shadow-lg shadow-cyan-500/20">
+                <i class="fa-solid fa-temperature-half text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-300 bg-clip-text text-transparent">
+                    WebAR Fisika: Konsep Suhu & Skala
+                </h1>
+                <p class="text-xs text-slate-400">Fisika SMA Kelas X • Kurikulum Merdeka</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="window.print()" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-600 transition flex items-center space-x-1.5 shadow">
+                <i class="fa-solid fa-print"></i>
+                <span class="hidden sm:inline">Cetak / Simpan PDF</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Split Container -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-3 md:p-4 max-w-[1920px] mx-auto w-full">
+        
+        <!-- LEFT COLUMN: Interactive LKPD (6 cols desktop) -->
+        <section class="lg:col-span-6 flex flex-col space-y-4 overflow-y-auto pr-0 lg:pr-2 print-full" id="lkpd-section">
+            
+            <!-- Identitas Siswa Card -->
+            <div class="glass-panel rounded-2xl p-4 shadow-xl">
+                <h2 class="text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-3 flex items-center">
+                    <i class="fa-solid fa-id-card mr-2"></i> Identitas Peserta Didik
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Nama / Kelompok:</label>
+                        <input type="text" id="student-name" placeholder="Masukkan nama/kelompok" class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-cyan-500 text-slate-100 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Kelas / Semester:</label>
+                        <input type="text" id="student-class" value="X / Ganjil" class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-cyan-500 text-slate-100 transition">
+                    </div>
+                </div>
+            </div>
+
+            <!-- FASE 1: MEMAHAMI (Orientasi Masalah & Tujuan) -->
+            <div class="glass-panel rounded-2xl p-5 shadow-xl border-l-4 border-l-cyan-500">
+                <div class="flex items-center space-x-2 mb-3">
+                    <span class="bg-cyan-500/20 text-cyan-400 text-xs font-bold px-2.5 py-1 rounded-full border border-cyan-500/30">FASE 1</span>
+                    <h3 class="font-bold text-base text-slate-100">Memahami (Orientasi Masalah)</h3>
+                </div>
+                
+                <div class="space-y-3 text-sm text-slate-300 leading-relaxed">
+                    <div class="bg-slate-900/60 rounded-xl p-3.5 border border-slate-800">
+                        <h4 class="font-semibold text-cyan-300 mb-1 flex items-center text-xs uppercase tracking-wide">
+                            <i class="fa-solid fa-bullseye mr-1.5"></i> Tujuan Pembelajaran:
+                        </h4>
+                        <ul class="list-disc list-inside text-xs space-y-1 text-slate-300">
+                            <li>Memahami konsep suhu sebagai derajat panas/dingin suatu benda secara kualitatif & kuantitatif.</li>
+                            <li>Mengonversi nilai suhu secara tepat antara skala Celsius (°C), Fahrenheit (°F), Reamur (°R), dan Kelvin (K).</li>
+                            <li>Menganalisis perubahan wujud visual & fenomena termal air berdasarkan perubahan suhu melalui teknologi WebAR.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-slate-800/40 rounded-xl p-3.5 border border-slate-700/50">
+                        <h4 class="font-semibold text-amber-300 mb-1 flex items-center text-xs uppercase tracking-wide">
+                            <i class="fa-solid fa-lightbulb mr-1.5"></i> Wacana Masalah:
+                        </h4>
+                        <p class="text-xs text-slate-300 text-justify">
+                            Ketika Anda menyentuh air dingin dari es dan air hangat menggunakan tangan, indra peraba Anda dapat merasakan bedanya. Namun, bisakah tangan Anda menentukan angka pasti suhunya secara akurat? Mengapa laboratorium sains di Amerika sering menggunakan °F, sementara Indonesia menggunakan °C, dan SI menggunakan Kelvin? Mari kita selidiki hubungannya secara kuantitatif melalui simulasi virtual WebAR di samping!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FASE 2: MENGAPLIKASI (Aktivitas Eksperimen Virtual & Kontrol) -->
+            <div class="glass-panel rounded-2xl p-5 shadow-xl border-l-4 border-l-sky-500">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-sky-500/20 text-sky-400 text-xs font-bold px-2.5 py-1 rounded-full border border-sky-500/30">FASE 2</span>
+                        <h3 class="font-bold text-base text-slate-100">Mengaplikasi (Eksperimen Virtual)</h3>
+                    </div>
+                    <span class="text-xs text-slate-400 no-print"><i class="fa-solid fa-sliders mr-1"></i> Simulator Kontrol</span>
+                </div>
+
+                <!-- Live Temperature Controller -->
+                <div class="glass-card p-4 rounded-xl mb-4 space-y-4 no-print border border-sky-500/20">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Skala Acuan Input:</label>
+                            <select id="input-scale" onchange="handleScaleChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500">
+                                <option value="C">Celsius (°C)</option>
+                                <option value="F">Fahrenheit (°F)</option>
+                                <option value="R">Reamur (°R)</option>
+                                <option value="K">Kelvin (K)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Preset Suhu Cepat:</label>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button onclick="setPresetTemp(5)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded text-xs border border-cyan-500/30 transition">Dingin (5°C)</button>
+                                <button onclick="setPresetTemp(27)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded text-xs border border-emerald-500/30 transition">Ruang (27°C)</button>
+                                <button onclick="setPresetTemp(60)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded text-xs border border-amber-500/30 transition">Hangat (60°C)</button>
+                                <button onclick="setPresetTemp(100)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-rose-300 rounded text-xs border border-rose-500/30 transition">Mendidih (100°C)</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slider Input -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-medium text-slate-300">Atur Nilai Suhu Air:</span>
+                            <span id="slider-val-display" class="font-mono text-sm font-bold text-cyan-400">27.0 °C</span>
+                        </div>
+                        <input type="range" id="temp-slider" min="-10" max="110" step="0.5" value="27" oninput="updateTemperatureFromSlider(this.value)" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                            <span>Min (-10°C)</span>
+                            <span>0°C (Beku)</span>
+                            <span>100°C (Mendidih)</span>
+                            <span>Max (110°C)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-time Conversion Result Grid -->
+                <div class="mb-4">
+                    <h4 class="text-xs font-semibold text-slate-300 mb-2 flex items-center">
+                        <i class="fa-solid fa-calculator text-sky-400 mr-1.5"></i> Live Display Hasil Konversi Suhu:
+                    </h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                        <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Celsius</span>
+                            <span id="val-c" class="font-mono text-lg font-bold text-cyan-400">27.00</span>
+                            <span class="text-xs text-slate-400">°C</span>
+                        </div>
+                        <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Fahrenheit</span>
+                            <span id="val-f" class="font-mono text-lg font-bold text-sky-400">80.60</span>
+                            <span class="text-xs text-slate-400">°F</span>
+                        </div>
+                        <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Reamur</span>
+                            <span id="val-r" class="font-mono text-lg font-bold text-indigo-400">21.60</span>
+                            <span class="text-xs text-slate-400">°R</span>
+                        </div>
+                        <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Kelvin</span>
+                            <span id="val-k" class="font-mono text-lg font-bold text-purple-400">300.15</span>
+                            <span class="text-xs text-slate-400">K</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action to add record -->
+                <div class="flex justify-between items-center mb-3 no-print">
+                    <span class="text-xs text-slate-400">Lakukan eksperimen & rekam data ke tabel pengamatan:</span>
+                    <button onclick="recordDataToTable()" class="px-3 py-1.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-sky-500/20 transition flex items-center space-x-1">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Catat Hasil ke Tabel</span>
+                    </button>
+                </div>
+
+                <!-- Interactive Data Table -->
+                <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/60">
+                    <table class="w-full text-xs text-left text-slate-300">
+                        <thead class="bg-slate-800/80 text-slate-300 uppercase text-[10px] tracking-wider border-b border-slate-700">
+                            <tr>
+                                <th class="px-3 py-2">No</th>
+                                <th class="px-3 py-2">Kondisi Air</th>
+                                <th class="px-3 py-2">Celsius (°C)</th>
+                                <th class="px-3 py-2">Fahrenheit (°F)</th>
+                                <th class="px-3 py-2">Reamur (°R)</th>
+                                <th class="px-3 py-2">Kelvin (K)</th>
+                                <th class="px-2 py-2 text-center no-print">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="observation-table-body" class="divide-y divide-slate-800/60 font-mono">
+                            <!-- Dynamic rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- FASE 3: MEREFLEKSI (Pertanyaan Analisis & Kesimpulan) -->
+            <div class="glass-panel rounded-2xl p-5 shadow-xl border-l-4 border-l-indigo-500 space-y-4">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-indigo-500/20 text-indigo-400 text-xs font-bold px-2.5 py-1 rounded-full border border-indigo-500/30">FASE 3</span>
+                    <h3 class="font-bold text-base text-slate-100">Merefleksi & Analisis HOTS</h3>
+                </div>
+
+                <div class="space-y-4 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-200 mb-1.5">
+                            1. Berdasarkan data tabel di atas, bagaimana perbandingan perbandingan skala antara °C, °R, dan (°F - 32)? Buktikan secara matematis dari data Anda!
+                        </label>
+                        <textarea rows="3" placeholder="Tuliskan analisis perbandingan skala (contoh: C : R : (F-32) = 5 : 4 : 9)..." class="w-full bg-slate-900/80 border border-slate-700 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-indigo-500 transition"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-200 mb-1.5">
+                            2. Mengapa skala Kelvin tidak menggunakan tanda derajat (°)? Apa keistimewaan nol mutlak (0 K) dalam konteks gerak molekul air?
+                        </label>
+                        <textarea rows="3" placeholder="Tuliskan penjelasan mengenai skala mutlak Kelvin..." class="w-full bg-slate-900/80 border border-slate-700 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-indigo-500 transition"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-200 mb-1.5">
+                            3. Kesimpulan Eksperimen:
+                        </label>
+                        <textarea rows="3" placeholder="Buatlah kesimpulan mengenai konsep suhu, konversi antar skala, dan pengamatan perubahan fisik cairan..." class="w-full bg-slate-900/80 border border-slate-700 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-indigo-500 transition"></textarea>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: 3D & WebAR Viewer (6 cols desktop) -->
+        <section class="lg:col-span-6 flex flex-col space-y-3 no-print">
+            <div class="glass-panel rounded-2xl p-3 flex-1 flex flex-col relative overflow-hidden min-h-[500px] lg:min-h-[650px] shadow-2xl border border-slate-700/60">
+                
+                <!-- Viewer Top Controls Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 z-10 backdrop-blur-md">
+                    <div class="flex items-center space-x-2">
+                        <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+                            3D Live Physics Engine
+                        </span>
+                    </div>
+
+                    <!-- AR / 3D Mode Switch Buttons -->
+                    <div class="flex items-center bg-slate-800 p-1 rounded-lg border border-slate-700">
+                        <button id="btn-mode-3d" onclick="switchViewMode('3d')" class="px-3 py-1 rounded-md text-xs font-medium transition bg-cyan-500 text-slate-950 font-semibold shadow">
+                            <i class="fa-solid fa-cube mr-1"></i> Mode 3D
+                        </button>
+                        <button id="btn-mode-ar" onclick="switchViewMode('ar')" class="px-3 py-1 rounded-md text-xs font-medium text-slate-400 hover:text-slate-200 transition">
+                            <i class="fa-solid fa-camera-retro mr-1"></i> Mode WebAR Camera
+                        </button>
+                    </div>
+                </div>
+
+                <!-- WebAR Camera Stream Video Canvas Container -->
+                <div class="relative flex-1 w-full h-full rounded-xl overflow-hidden mt-2 bg-slate-950 flex items-center justify-center">
+                    
+                    <!-- WebAR Background Video Feed (Active in AR Mode) -->
+                    <video id="ar-video" autoplay playsinline class="absolute inset-0 w-full h-full object-cover hidden z-0"></video>
+
+                    <!-- Three.js Canvas Container -->
+                    <div id="three-container" class="absolute inset-0 w-full h-full z-10"></div>
+
+                    <!-- 3D Overlay Floating Info Box -->
+                    <div class="absolute top-4 left-4 z-20 pointer-events-none">
+                        <div class="glass-panel p-3 rounded-xl border border-cyan-500/30 shadow-lg text-slate-100 space-y-1">
+                            <div class="text-[10px] uppercase font-bold text-cyan-400 tracking-wider">Status Benda Uji 3D</div>
+                            <div id="status-temp-text" class="text-sm font-bold">Air Suhu Ruang</div>
+                            <div class="text-xs text-slate-300 font-mono">
+                                Suhu: <span id="ar-overlay-temp" class="text-cyan-300 font-bold">27.0 °C</span>
+                            </div>
+                            <div id="status-state-text" class="text-[11px] text-emerald-400 flex items-center">
+                                <i class="fa-solid fa-droplet mr-1"></i> Fase Cair (Normal)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AR Fallback / Guidance Notification -->
+                    <div id="ar-guide-msg" class="hidden absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-slate-900/90 border border-cyan-500/40 text-cyan-200 px-4 py-2 rounded-xl text-xs backdrop-blur-md shadow-2xl flex items-center space-x-2 max-w-[90%] text-center">
+                        <i class="fa-solid fa-circle-info text-cyan-400 text-base"></i>
+                        <span>Mode WebAR Kamera Aktif (Markerless). Arahkan kamera ke permukaan datar tempat air & termometer diletakkan.</span>
+                    </div>
+
+                    <!-- Interactive Camera Control Instructions -->
+                    <div class="absolute bottom-3 right-3 z-20 pointer-events-none hidden sm:block">
+                        <div class="bg-slate-900/60 backdrop-blur text-[10px] text-slate-400 px-2.5 py-1.5 rounded-lg border border-slate-800 flex items-center space-x-2">
+                            <span><i class="fa-solid fa-hand-pointer mr-1"></i> Putar/Zoom: Drag/Scroll Mouse</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Quick Physics Simulation Legend -->
+                <div class="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="bg-slate-900/70 p-2 rounded-lg border border-slate-800">
+                        <div class="text-[10px] text-slate-400">Cairan Termometer</div>
+                        <div id="fluid-height-text" class="font-mono text-cyan-300 font-bold">Raksa / Alkohol</div>
+                    </div>
+                    <div class="bg-slate-900/70 p-2 rounded-lg border border-slate-800">
+                        <div class="text-[10px] text-slate-400">Warna Air Gelas</div>
+                        <div id="water-color-text" class="font-bold text-emerald-400">Hijau/Biru Ruang</div>
+                    </div>
+                    <div class="bg-slate-900/70 p-2 rounded-lg border border-slate-800">
+                        <div class="text-[10px] text-slate-400">Efek Termal 3D</div>
+                        <div id="particle-status-text" class="font-bold text-slate-400">Tenang</div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- App Logic Script -->
+    <script>
+        // --- GLOBAL STATE ---
+        let currentTempCelsius = 27.0;
+        let selectedInputScale = 'C';
+        let viewMode = '3d'; // '3d' or 'ar'
+        let observationCount = 0;
+
+        // Three.js Variables
+        let scene, camera, renderer, controls;
+        let thermometerFluidMesh, waterMesh, steamParticles, iceCubesGroup;
+        let labelCanvas, labelTexture, labelSprite;
+        let videoStream = null;
+
+        // --- TEMPERATURE CONVERSION UTILITIES ---
+        function convertFromCelsius(cVal) {
+            return {
+                C: cVal,
+                F: (9/5 * cVal) + 32,
+                R: 4/5 * cVal,
+                K: cVal + 273.15
+            };
+        }
+
+        function convertToCelsius(val, scale) {
+            switch(scale) {
+                case 'C': return val;
+                case 'F': return (val - 32) * 5/9;
+                case 'R': return val * 5/4;
+                case 'K': return val - 273.15;
+                default: return val;
+            }
+        }
+
+        // --- UI & CONTROLLER HANDLERS ---
+        function updateTemperatureFromSlider(val) {
+            const rawVal = parseFloat(val);
+            currentTempCelsius = convertToCelsius(rawVal, selectedInputScale);
+            renderTemperatureUI();
+            update3DModels();
+        }
+
+        function handleScaleChange() {
+            selectedInputScale = document.getElementById('input-scale').value;
+            const slider = document.getElementById('temp-slider');
+            
+            // Adjust slider range limits based on scale
+            if (selectedInputScale === 'C') {
+                slider.min = -10; slider.max = 110; slider.step = 0.5;
+            } else if (selectedInputScale === 'F') {
+                slider.min = 14; slider.max = 230; slider.step = 1;
+            } else if (selectedInputScale === 'R') {
+                slider.min = -8; slider.max = 88; slider.step = 0.5;
+            } else if (selectedInputScale === 'K') {
+                slider.min = 263.15; slider.max = 383.15; slider.step = 1;
+            }
+
+            // Set slider current value converted
+            const converted = convertFromCelsius(currentTempCelsius);
+            slider.value = converted[selectedInputScale];
+            renderTemperatureUI();
+        }
+
+        function setPresetTemp(celsiusVal) {
+            currentTempCelsius = celsiusVal;
+            const converted = convertFromCelsius(celsiusVal);
+            document.getElementById('temp-slider').value = converted[selectedInputScale];
+            renderTemperatureUI();
+            update3DModels();
+        }
+
+        function renderTemperatureUI() {
+            const conv = convertFromCelsius(currentTempCelsius);
+
+            // Display formatted outputs
+            document.getElementById('val-c').innerText = conv.C.toFixed(2);
+            document.getElementById('val-f').innerText = conv.F.toFixed(2);
+            document.getElementById('val-r').innerText = conv.R.toFixed(2);
+            document.getElementById('val-k').innerText = conv.K.toFixed(2);
+
+            // Slider text label
+            const scaleSymbol = selectedInputScale === 'K' ? 'K' : `°${selectedInputScale}`;
+            const currInputValue = conv[selectedInputScale];
+            document.getElementById('slider-val-display').innerText = `${currInputValue.toFixed(1)} ${scaleSymbol}`;
+
+            // AR overlay text
+            document.getElementById('ar-overlay-temp').innerText = `${conv.C.toFixed(1)} °C (${conv.F.toFixed(1)} °F)`;
+
+            // Update status description
+            const statusText = document.getElementById('status-temp-text');
+            const stateText = document.getElementById('status-state-text');
+
+            if (currentTempCelsius <= 0) {
+                statusText.innerText = "Air Membeku / Es";
+                statusText.className = "text-sm font-bold text-cyan-300";
+                stateText.innerHTML = '<i class="fa-solid fa-snowflake mr-1"></i> Fase Padat (Es)';
+                stateText.className = "text-[11px] text-cyan-300 flex items-center";
+            } else if (currentTempCelsius < 20) {
+                statusText.innerText = "Air Dingin";
+                statusText.className = "text-sm font-bold text-blue-400";
+                stateText.innerHTML = '<i class="fa-solid fa-droplet mr-1"></i> Cairan Dingin';
+                stateText.className = "text-[11px] text-blue-400 flex items-center";
+            } else if (currentTempCelsius <= 35) {
+                statusText.innerText = "Air Suhu Ruang";
+                statusText.className = "text-sm font-bold text-emerald-400";
+                stateText.innerHTML = '<i class="fa-solid fa-droplet mr-1"></i> Fase Cair Normal';
+                stateText.className = "text-[11px] text-emerald-400 flex items-center";
+            } else if (currentTempCelsius < 100) {
+                statusText.innerText = "Air Hangat / Panas";
+                statusText.className = "text-sm font-bold text-amber-400";
+                stateText.innerHTML = '<i class="fa-solid fa-fire-flame-curved mr-1"></i> Cairan Panas';
+                stateText.className = "text-[11px] text-amber-400 flex items-center";
+            } else {
+                statusText.innerText = "Air Mendidih!";
+                statusText.className = "text-sm font-bold text-rose-500 animate-pulse";
+                stateText.innerHTML = '<i class="fa-solid fa-temperature-arrow-up mr-1"></i> Mendidih & Penguapan';
+                stateText.className = "text-[11px] text-rose-400 flex items-center font-bold";
+            }
+        }
+
+        // --- DATA TABLE MANAGEMENT ---
+        function recordDataToTable() {
+            observationCount++;
+            const conv = convertFromCelsius(currentTempCelsius);
+            
+            let condition = "Suhu Ruang";
+            if (currentTempCelsius <= 0) condition = "Air Es (Membeku)";
+            else if (currentTempCelsius < 20) condition = "Air Dingin";
+            else if (currentTempCelsius > 35 && currentTempCelsius < 100) condition = "Air Hangat";
+            else if (currentTempCelsius >= 100) condition = "Air Mendidih";
+
+            const tbody = document.getElementById('observation-table-body');
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-800/40 transition";
+            tr.innerHTML = `
+                <td class="px-3 py-2 text-slate-400">${observationCount}</td>
+                <td class="px-3 py-2 font-sans text-slate-200">${condition}</td>
+                <td class="px-3 py-2 text-cyan-400 font-bold">${conv.C.toFixed(2)}</td>
+                <td class="px-3 py-2 text-sky-400">${conv.F.toFixed(2)}</td>
+                <td class="px-3 py-2 text-indigo-400">${conv.R.toFixed(2)}</td>
+                <td class="px-3 py-2 text-purple-400">${conv.K.toFixed(2)}</td>
+                <td class="px-2 py-2 text-center no-print">
+                    <button onclick="this.closest('tr').remove()" class="text-slate-500 hover:text-rose-400 p-1">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        // Initial default observation row
+        function addInitialTableRows() {
+            setPresetTemp(5); recordDataToTable();
+            setPresetTemp(27); recordDataToTable();
+            setPresetTemp(60); recordDataToTable();
+        }
+
+        // --- THREE.JS 3D SCENE SETUP ---
+        function initThreeJS() {
+            const container = document.getElementById('three-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            // Scene
+            scene = new THREE.Scene();
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+            camera.position.set(0, 3.5, 7.5);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            // OrbitControls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2 + 0.05; // Don't go far below ground
+            controls.minDistance = 3;
+            controls.maxDistance = 15;
+            controls.target.set(0, 1.5, 0);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 10, 7);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            const pointLight = new THREE.PointLight(0x38bdf8, 0.5, 10);
+            pointLight.position.set(-3, 3, 2);
+            scene.add(pointLight);
+
+            // Build Physics & Lab Objects
+            buildLabEnvironment();
+
+            // Window Resize Listener
+            window.addEventListener('resize', onWindowResize);
+
+            // Start Render Loop
+            animate();
+        }
+
+        function buildLabEnvironment() {
+            // Lab Table Base
+            const tableGeo = new THREE.CylinderGeometry(3.5, 3.7, 0.2, 32);
+            const tableMat = new THREE.MeshStandardMaterial({ 
+                color: 0x1e293b, 
+                roughness: 0.4, 
+                metalness: 0.2 
+            });
+            const table = new THREE.Mesh(tableGeo, tableMat);
+            table.position.y = -0.1;
+            table.receiveShadow = true;
+            scene.add(table);
+
+            // Grid helper on table for WebAR feel
+            const grid = new THREE.GridHelper(6, 12, 0x38bdf8, 0x334155);
+            grid.position.y = 0.01;
+            scene.add(grid);
+
+            // 1. BEAKER / GELAS KIMIA (Glass Material)
+            const beakerGroup = new THREE.Group();
+
+            // Beaker Outer Glass
+            const beakerGeo = new THREE.CylinderGeometry(1.2, 1.1, 2.6, 32, 1, true);
+            const glassMat = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.3,
+                roughness: 0.1,
+                transmission: 0.9,
+                ior: 1.5,
+                thickness: 0.2,
+                side: THREE.DoubleSide
+            });
+            const beakerMesh = new THREE.Mesh(beakerGeo, glassMat);
+            beakerMesh.position.y = 1.3;
+            beakerGroup.add(beakerMesh);
+
+            // Beaker Bottom Glass
+            const bottomGeo = new THREE.CylinderGeometry(1.1, 1.1, 0.05, 32);
+            const bottomMesh = new THREE.Mesh(bottomGeo, glassMat);
+            bottomMesh.position.y = 0.025;
+            beakerGroup.add(bottomMesh);
+
+            // Water Inside Beaker
+            const waterGeo = new THREE.CylinderGeometry(1.05, 1.02, 1.8, 32);
+            const waterMat = new THREE.MeshStandardMaterial({
+                color: 0x10b981, // Initial room temp green/cyan
+                transparent: true,
+                opacity: 0.75,
+                roughness: 0.2
+            });
+            waterMesh = new THREE.Mesh(waterGeo, waterMat);
+            waterMesh.position.y = 0.95;
+            beakerGroup.add(waterMesh);
+
+            // Ice Cubes Group inside water (visible when temp <= 0)
+            iceCubesGroup = new THREE.Group();
+            const iceGeo = new THREE.BoxGeometry(0.35, 0.35, 0.35);
+            const iceMat = new THREE.MeshStandardMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.85 });
+            for(let i = 0; i < 4; i++) {
+                const ice = new THREE.Mesh(iceGeo, iceMat);
+                ice.position.set((Math.random()-0.5)*0.8, 1.4 + Math.random()*0.2, (Math.random()-0.5)*0.8);
+                ice.rotation.set(Math.random(), Math.random(), Math.random());
+                iceCubesGroup.add(ice);
+            }
+            iceCubesGroup.visible = false;
+            beakerGroup.add(iceCubesGroup);
+
+            beakerGroup.position.set(-0.6, 0, 0);
+            scene.add(beakerGroup);
+
+            // 2. THERMOMETER (Termometer Digital/Alkohol-Raksa)
+            const thermoGroup = new THREE.Group();
+
+            // Glass Outer Tube
+            const tubeGeo = new THREE.CylinderGeometry(0.12, 0.12, 3.2, 16);
+            const tubeMat = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.35,
+                roughness: 0.1,
+                transmission: 0.8
+            });
+            const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
+            tubeMesh.position.y = 1.6;
+            thermoGroup.add(tubeMesh);
+
+            // Bottom Bulb
+            const bulbGeo = new THREE.SphereGeometry(0.22, 16, 16);
+            const bulbMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 });
+            const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
+            bulbMesh.position.y = 0.2;
+            thermoGroup.add(bulbMesh);
+
+            // Fluid Column inside tube
+            const fluidGeo = new THREE.CylinderGeometry(0.05, 0.05, 1, 16);
+            // Translate geometry so scaling happens from bottom up
+            fluidGeo.translate(0, 0.5, 0);
+            const fluidMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.2 });
+            thermometerFluidMesh = new THREE.Mesh(fluidGeo, fluidMat);
+            thermometerFluidMesh.position.y = 0.2; // Starts from bulb
+            thermoGroup.add(thermometerFluidMesh);
+
+            // Measurement Scale Ticks
+            for (let i = 0; i <= 10; i++) {
+                const tickGeo = new THREE.BoxGeometry(0.08, 0.015, 0.015);
+                const tickMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                const tick = new THREE.Mesh(tickGeo, tickMat);
+                tick.position.set(0.1, 0.4 + (i * 0.24), 0);
+                thermoGroup.add(tick);
+            }
+
+            // Position Thermometer slightly dipped into beaker water
+            thermoGroup.position.set(0.2, 0.1, 0);
+            thermoGroup.rotation.z = -0.15; // Slanted inside beaker
+            scene.add(thermoGroup);
+
+            // 3. STEAM PARTICLES (For hot/boiling water)
+            const particleCount = 40;
+            const particleGeo = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            for(let i=0; i<particleCount*3; i+=3) {
+                positions[i] = (Math.random() - 0.5) * 1.2 - 0.6;
+                positions[i+1] = 1.8 + Math.random() * 1.5;
+                positions[i+2] = (Math.random() - 0.5) * 1.2;
+            }
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const particleMat = new THREE.PointsMaterial({
+                color: 0xf8fafc,
+                size: 0.08,
+                transparent: true,
+                opacity: 0,
+                blending: THREE.AdditiveBlending
+            });
+            steamParticles = new THREE.Points(particleGeo, particleMat);
+            scene.add(steamParticles);
+
+            // Apply initial state
+            update3DModels();
+        }
+
+        // Dynamic 3D Object Updates based on Temperature State
+        function update3DModels() {
+            if (!thermometerFluidMesh || !waterMesh) return;
+
+            // 1. Thermometer Fluid Column Height Calculation (-10°C to 110°C)
+            // Normalized height scale between 0.1 and 2.6
+            const clampedTemp = Math.max(-10, Math.min(110, currentTempCelsius));
+            const normalized = (clampedTemp - (-10)) / (110 - (-10)); // 0.0 to 1.0
+            const targetScaleY = 0.1 + (normalized * 2.5);
+
+            // Smooth scaling
+            thermometerFluidMesh.scale.y = targetScaleY;
+
+            // 2. Water Color Transition based on Temperature
+            let targetColor = new THREE.Color();
+            const waterColorLabel = document.getElementById('water-color-text');
+            const particleStatusText = document.getElementById('particle-status-text');
+
+            if (currentTempCelsius <= 0) {
+                targetColor.setHex(0x38bdf8); // Ice Cyan
+                iceCubesGroup.visible = true;
+                if (waterColorLabel) waterColorLabel.innerText = "Biru Es (Beku)";
+            } else if (currentTempCelsius < 20) {
+                targetColor.setHex(0x0284c7); // Cold Blue
+                iceCubesGroup.visible = false;
+                if (waterColorLabel) waterColorLabel.innerText = "Biru Dingin";
+            } else if (currentTempCelsius <= 35) {
+                targetColor.setHex(0x10b981); // Room Temp Emerald
+                iceCubesGroup.visible = false;
+                if (waterColorLabel) waterColorLabel.innerText = "Hijau Suhu Ruang";
+            } else if (currentTempCelsius < 80) {
+                targetColor.setHex(0xf59e0b); // Warm Amber
+                iceCubesGroup.visible = false;
+                if (waterColorLabel) waterColorLabel.innerText = "Oranye Hangat";
+            } else {
+                targetColor.setHex(0xef4444); // Boiling Red
+                iceCubesGroup.visible = false;
+                if (waterColorLabel) waterColorLabel.innerText = "Merah Panas";
+            }
+
+            waterMesh.material.color.lerp(targetColor, 0.8);
+
+            // 3. Steam particles opacity for hot temperature
+            if (currentTempCelsius > 50) {
+                const steamOpacity = Math.min(0.8, (currentTempCelsius - 50) / 60);
+                steamParticles.material.opacity = steamOpacity;
+                if (particleStatusText) particleStatusText.innerText = currentTempCelsius >= 100 ? "Uap Mendidih Intens" : "Uap Panas Halus";
+            } else {
+                steamParticles.material.opacity = 0;
+                if (particleStatusText) particleStatusText.innerText = currentTempCelsius <= 0 ? "Kristal Es" : "Tenang";
+            }
+        }
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Animate Steam particles floating up
+            if (steamParticles && steamParticles.material.opacity > 0) {
+                const positions = steamParticles.geometry.attributes.position.array;
+                for (let i = 1; i < positions.length; i += 3) {
+                    positions[i] += 0.015;
+                    if (positions[i] > 3.2) {
+                        positions[i] = 1.8;
+                    }
+                }
+                steamParticles.geometry.attributes.position.needsUpdate = true;
+            }
+
+            // Animate Ice cubes subtle floating motion
+            if (iceCubesGroup && iceCubesGroup.visible) {
+                iceCubesGroup.children.forEach((ice, idx) => {
+                    ice.rotation.y += 0.01;
+                    ice.position.y = 1.4 + Math.sin(Date.now() * 0.003 + idx) * 0.03;
+                });
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('three-container');
+            if (!container) return;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        // --- WEBAR & 3D MODE SWITCHING LOGIC ---
+        async function switchViewMode(mode) {
+            viewMode = mode;
+            const btn3d = document.getElementById('btn-mode-3d');
+            const btnAr = document.getElementById('btn-mode-ar');
+            const videoElem = document.getElementById('ar-video');
+            const guideMsg = document.getElementById('ar-guide-msg');
+
+            if (mode === 'ar') {
+                btnAr.className = "px-3 py-1 rounded-md text-xs font-semibold bg-cyan-500 text-slate-950 shadow transition";
+                btn3d.className = "px-3 py-1 rounded-md text-xs font-medium text-slate-400 hover:text-slate-200 transition";
+
+                // Request Camera Access for Markerless AR Background Feed
+                try {
+                    videoStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'environment' }
+                    });
+                    videoElem.srcObject = videoStream;
+                    videoElem.classList.remove('hidden');
+                    guideMsg.classList.remove('hidden');
+                    
+                    // Adjust canvas background transparency for WebAR camera overlay
+                    renderer.setClearColor(0x000000, 0);
+                } catch (err) {
+                    console.warn("Camera access failed or denied for WebAR mode:", err);
+                    alert("Kamera tidak dapat diakses atau izin ditolak. Mengembalikan ke Mode 3D Interactive Viewer.");
+                    switchViewMode('3d');
+                }
+            } else {
+                btn3d.className = "px-3 py-1 rounded-md text-xs font-semibold bg-cyan-500 text-slate-950 shadow transition";
+                btnAr.className = "px-3 py-1 rounded-md text-xs font-medium text-slate-400 hover:text-slate-200 transition";
+
+                // Stop Video Stream if active
+                if (videoStream) {
+                    videoStream.getTracks().forEach(track => track.stop());
+                    videoStream = null;
+                }
+                videoElem.classList.add('hidden');
+                guideMsg.classList.add('hidden');
+
+                // Reset scene background color
+                renderer.setClearColor(0x0f172a, 0);
+            }
+        }
+
+        // --- INITIALIZATION ON WINDOW LOAD ---
+        window.onload = function() {
+            initThreeJS();
+            renderTemperatureUI();
+            addInitialTableRows();
+        };
+    </script>
+</body>
+</html>
